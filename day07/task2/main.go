@@ -6,7 +6,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type Equation struct {
@@ -100,8 +99,6 @@ func main() {
 	}
 	defer file.Close()
 
-	start := time.Now()
-
 	equations := createEquations(file)
 	combinationMap := make(map[int][][]rune)
 
@@ -121,6 +118,4 @@ func main() {
 	}
 
 	fmt.Println(sum)
-	elapsed := time.Since(start)
-	fmt.Println(elapsed)
 }
