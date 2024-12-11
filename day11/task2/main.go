@@ -27,20 +27,6 @@ func createSlice(file *os.File) []string {
 	return slice
 }
 
-func insertNumberSplitIntoArray(slice []string, index int) []string {
-	number := slice[index]
-	newNumber1 := number[0 : len(number)/2]
-	newNumber2 := number[len(number)/2:]
-	fixPotentialZeros, _ := strconv.Atoi(newNumber2)
-	newNumber2 = strconv.Itoa(fixPotentialZeros)
-
-	slice = append(slice, "")
-	copy(slice[index+2:], slice[index+1:])
-	slice[index] = newNumber1
-	slice[index+1] = newNumber2
-	return slice
-}
-
 func numberSplitter(number string) []string {
 	newNumber1 := number[0 : len(number)/2]
 	newNumber2 := number[len(number)/2:]
@@ -50,9 +36,9 @@ func numberSplitter(number string) []string {
 	return []string{newNumber1, newNumber2}
 }
 
-var memo = make(map[Memory][]string)
+var memo = make(map[Memory]int)
 
-func Blink(number string, blink int) []string {
+func Blink(number string, blink int) int {
 	memory := Memory{Number: number, Blinks: blink}
 
 	if memorisedList, exists := memo[memory]; exists {
@@ -60,21 +46,24 @@ func Blink(number string, blink int) []string {
 	}
 
 	if blink == 0 {
-		memo[memory] = []string{number}
+		memo[memory] = 1
 		return memo[memory]
 	}
 
 	blink--
 	if number == "0" {
 		number = "1"
-		return Blink(number, blink)
+		memo[memory] = Blink(number, blink)
+		return memo[memory]
 	} else if len(number)%2 == 0 {
 		sliceResult := numberSplitter(number)
-		return append(Blink(sliceResult[0], blink), Blink(sliceResult[1], blink)...)
+		memo[memory] = Blink(sliceResult[0], blink) + Blink(sliceResult[1], blink)
+		return memo[memory]
 	} else {
 		product, _ := strconv.Atoi(number)
 		product *= 2024
-		return Blink(strconv.Itoa(product), blink)
+		memo[memory] = Blink(strconv.Itoa(product), blink)
+		return memo[memory]
 	}
 
 }
@@ -85,7 +74,7 @@ type Memory struct {
 }
 
 func main() {
-	file, err := os.Open("../testinput.txt")
+	file, err := os.Open("../input.txt")
 	if err != nil {
 		fmt.Println("Error opening file:", err)
 		return
@@ -95,18 +84,18 @@ func main() {
 	numbers := createSlice(file)
 
 	start := time.Now()
-	blinks := 25
+	blinks := 75
 
-	var result []string
+	var result int
 	for _, number := range numbers {
 		memory := Memory{Number: number, Blinks: blinks}
 		memo[memory] = Blink(number, blinks)
-		result = append(result, memo[memory]...)
+		result += memo[memory]
 	}
 
 	elapsed := time.Since(start)
 	fmt.Printf("Blinks: %v \n", blinks)
-	fmt.Printf("Answer: %v \n", len(result))
+	fmt.Printf("Answer: %v \n", result)
 	fmt.Printf("Time: %v \n", elapsed)
 
 }
