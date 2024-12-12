@@ -126,7 +126,7 @@ func insertElements(slice []string, index int, newValue1 string, newValue2 strin
 }
 
 /*
-A special slice is the input where all the free spaces are negative (every other number) is negative.
+A special slice is the input where all the free spaces (every other number) are negative.
 So for test input 2333133121414131402 a special slice is [2 -3 3 -3 1 -3 3 -1 2 -1 4 -1 4 -1 3 -1 4 -0 2]
 The slice is then sorted by moving positive numbers from the right to the first negative number from the left that is big enough
 to hold it.
