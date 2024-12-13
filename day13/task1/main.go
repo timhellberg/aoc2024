@@ -47,7 +47,7 @@ func extractNumbers(input string) []int {
 }
 
 func hasDecimalPart(f float64) bool {
-	return math.Abs(f-math.Round(f)) > 1e-30
+	return math.Abs(f-math.Round(f)) > 1e-2
 }
 
 func main() {
@@ -81,6 +81,7 @@ func main() {
 		}
 
 		taskValue := 10000000000000
+		//taskValue = 0
 		XA, YA := buttonANumbers[0], buttonANumbers[1]
 		XB, YB := buttonBNumbers[0], buttonBNumbers[1]
 		XTarget, YTarget := prizeNumbers[0]+taskValue, prizeNumbers[1]+taskValue
@@ -107,7 +108,7 @@ func main() {
 			continue
 		}
 
-		sum += 3*int(result.X[0]) + int(result.X[1])
+		sum += 3*int(math.Round(result.X[0])) + int(math.Round(result.X[1]))
 	}
 
 	fmt.Println(sum)
