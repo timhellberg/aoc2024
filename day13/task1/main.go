@@ -81,7 +81,7 @@ func main() {
 		}
 
 		taskValue := 10000000000000
-		//taskValue = 0
+		taskValue = 0
 		XA, YA := buttonANumbers[0], buttonANumbers[1]
 		XB, YB := buttonBNumbers[0], buttonBNumbers[1]
 		XTarget, YTarget := prizeNumbers[0]+taskValue, prizeNumbers[1]+taskValue
