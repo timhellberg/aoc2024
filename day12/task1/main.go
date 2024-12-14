@@ -84,6 +84,7 @@ func main() {
 	var regions = make(map[*Points]int)
 	for point, value := range grid {
 		points := getNeighbours(point, value)
+		fmt.Println(points)
 
 		regions[&Points{Points: points}] = parameter
 		parameter = 0

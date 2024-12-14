@@ -17,7 +17,6 @@ type Points struct {
 var grid = make(map[Point]rune)
 
 func createGrid(file *os.File) map[Point]rune {
-
 	scanner := bufio.NewScanner(file)
 
 	var y int
@@ -40,7 +39,6 @@ func createGrid(file *os.File) map[Point]rune {
 
 var visitedPoints = make(map[Point]bool)
 
-var sidesMap = make(map[Point][2]int)
 var directions = map[string][2]int{
 	"RIGHT": {1, 0},
 	"LEFT":  {-1, 0},
@@ -48,13 +46,12 @@ var directions = map[string][2]int{
 	"UP":    {0, -1},
 }
 
-var sides int
-
-func getNeighbours(point Point, plant rune) []Point {
+func getNeighbours(point Point, plant rune) ([]Point, int) {
 	var points = []Point{point}
+	var sides int
 
 	if visitedPoints[point] {
-		return nil
+		return nil, 0
 	}
 
 	visitedPoints[point] = true
@@ -63,14 +60,13 @@ func getNeighbours(point Point, plant rune) []Point {
 		neighborPoint := Point{X: point.X + dir[0], Y: point.Y + dir[1]}
 
 		if grid[neighborPoint] != plant {
-			sidesMap[point] = [2]int{dir[0], dir[1]}
 			var alreadyChecked bool
 			for key2, dir2 := range directions {
 				if key == key2 {
 					continue
 				}
 				otherNeighbourPoint := Point{X: point.X + dir2[0], Y: point.Y + dir2[1]}
-				if grid[otherNeighbourPoint] == plant && sidesMap[otherNeighbourPoint] == dir {
+				if grid[otherNeighbourPoint] == plant && grid[neighborPoint] == grid[otherNeighbourPoint] {
 					alreadyChecked = true
 					break
 				}
@@ -79,15 +75,16 @@ func getNeighbours(point Point, plant rune) []Point {
 			if !alreadyChecked {
 				sides++
 			}
-
 		}
 
 		if grid[neighborPoint] == plant {
-			points = append(points, getNeighbours(neighborPoint, plant)...)
+			neighbourPoints, neighbourSides := getNeighbours(neighborPoint, plant)
+			points = append(points, neighbourPoints...)
+			sides += neighbourSides
 		}
 	}
 
-	return points
+	return points, sides
 }
 
 func main() {
@@ -102,17 +99,19 @@ func main() {
 
 	var regions = make(map[*Points]int)
 	for point, value := range grid {
-		points := getNeighbours(point, value)
-
-		regions[&Points{Points: points}] = sides
-		sides = 0
+		if !visitedPoints[point] {
+			points, sides := getNeighbours(point, value)
+			if len(points) > 0 {
+				regions[&Points{Points: points}] = sides
+			}
+		}
 	}
 
 	var sum int
 	for key, value := range regions {
+		fmt.Println(key, value)
 		area := len(key.Points)
 		sum += area * value
-
 	}
 
 	fmt.Println(sum)
