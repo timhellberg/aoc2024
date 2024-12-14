@@ -37,8 +37,6 @@ func createGrid(file *os.File) map[Point]rune {
 	return grid
 }
 
-var visitedPoints = make(map[Point]bool)
-
 var directions = map[string][2]int{
 	"RIGHT": {1, 0},
 	"LEFT":  {-1, 0},
@@ -50,6 +48,8 @@ type pointAndDir struct {
 	point Point
 	dir   [2]int
 }
+
+var visitedPoints = make(map[Point]bool)
 
 func getNeighbours(point Point, plant rune) []Point {
 	var points = []Point{point}
@@ -73,31 +73,69 @@ func getNeighbours(point Point, plant rune) []Point {
 	return points
 }
 
-func calcSides(points []Point, value rune) int {
+func getBadNeighbours(point Point, plant rune) []Point {
+	var points = make([]Point, 0)
+
+	for _, dir := range directions {
+		neighborPoint := Point{X: point.X + dir[0], Y: point.Y + dir[1]}
+
+		if grid[neighborPoint] != plant {
+			points = append(points, neighborPoint)
+
+		}
+	}
+
+	return points
+}
+
+func contains(slice []Point, value Point) bool {
+	for _, v := range slice {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
+func calcSides(points []Point, badPoints []Point) int {
 	var sidesMap = make(map[pointAndDir]struct{})
 	var sides int
 	for _, point := range points {
-		for key, dir := range directions {
-			neighborPoint := Point{X: point.X + dir[0], Y: point.Y + dir[1]}
-			if grid[neighborPoint] != value {
-				sidesMap[pointAndDir{point: point, dir: dir}] = struct{}{}
-				var alreadyChecked bool
-				for _, dir2 := range directions {
-					otherNeighbourPoint := Point{X: point.X + dir2[0], Y: point.Y + dir2[1]}
-					if grid[otherNeighbourPoint] == value {
-						if _, exists := sidesMap[pointAndDir{point: otherNeighbourPoint, dir: dir}]; exists {
-							alreadyChecked = true
-							break
-						}
-
-					}
-				}
-
-				if !alreadyChecked {
-					sides++
-					fmt.Printf("Letter %v with point %v a new side!! the side is at %v with direction %s \n", string(value), point, neighborPoint, key)
-				}
+		for _, dir := range directions {
+			if _, exists := sidesMap[pointAndDir{point: point, dir: dir}]; exists {
+				continue
 			}
+			sidesMap[pointAndDir{point: point, dir: dir}] = struct{}{}
+			neighborPoint := Point{X: point.X + dir[0], Y: point.Y + dir[1]}
+			if contains(badPoints, neighborPoint) {
+				sides++
+			}
+
+			for _, dir2 := range directions {
+				otherNeighbourPoint1 := Point{X: point.X + dir2[0], Y: point.Y + dir2[1]}
+				for contains(points, otherNeighbourPoint1) {
+					sameDirPoint := Point{X: otherNeighbourPoint1.X + dir[0], Y: otherNeighbourPoint1.Y + dir[1]}
+					if contains(badPoints, sameDirPoint) {
+						sidesMap[pointAndDir{point: otherNeighbourPoint1, dir: dir}] = struct{}{}
+					} else {
+						break
+					}
+					otherNeighbourPoint1 = Point{X: otherNeighbourPoint1.X + dir2[0], Y: otherNeighbourPoint1.Y + dir2[1]}
+				}
+
+				otherNeighbourPoint2 := Point{X: point.X - dir2[0], Y: point.Y - dir2[1]}
+				for contains(points, otherNeighbourPoint2) {
+					sameDirPoint := Point{X: otherNeighbourPoint2.X + dir[0], Y: otherNeighbourPoint2.Y + dir[1]}
+					if contains(badPoints, sameDirPoint) {
+						sidesMap[pointAndDir{point: otherNeighbourPoint2, dir: dir}] = struct{}{}
+					} else {
+						break
+					}
+					otherNeighbourPoint2 = Point{X: otherNeighbourPoint2.X - dir2[0], Y: otherNeighbourPoint2.Y - dir2[1]}
+				}
+
+			}
+
 		}
 	}
 
@@ -107,7 +145,7 @@ func calcSides(points []Point, value rune) int {
 }
 
 func main() {
-	file, err := os.Open("../testinput.txt")
+	file, err := os.Open("../testinput2.txt")
 	if err != nil {
 		fmt.Println("Error opening file:", err)
 		return
@@ -121,7 +159,12 @@ func main() {
 		if !visitedPoints[point] {
 			points := getNeighbours(point, value)
 			if len(points) > 0 {
-				sides := calcSides(points, value)
+				var badPoints []Point
+				for _, point := range points {
+					badPoints = append(badPoints, getBadNeighbours(point, value)...)
+				}
+				fmt.Println(badPoints)
+				sides := calcSides(points, badPoints)
 				regions[&Points{Points: points}] = sides
 			}
 
