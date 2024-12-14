@@ -46,49 +46,68 @@ var directions = map[string][2]int{
 	"UP":    {0, -1},
 }
 
-func getNeighbours(point Point, plant rune) ([]Point, int) {
+type pointAndDir struct {
+	point Point
+	dir   [2]int
+}
+
+func getNeighbours(point Point, plant rune) []Point {
 	var points = []Point{point}
-	var sides int
 
 	if visitedPoints[point] {
-		return nil, 0
+		return nil
 	}
 
 	visitedPoints[point] = true
 
-	for key, dir := range directions {
+	for _, dir := range directions {
 		neighborPoint := Point{X: point.X + dir[0], Y: point.Y + dir[1]}
 
-		if grid[neighborPoint] != plant {
-			var alreadyChecked bool
-			for key2, dir2 := range directions {
-				if key == key2 {
-					continue
-				}
-				otherNeighbourPoint := Point{X: point.X + dir2[0], Y: point.Y + dir2[1]}
-				if grid[otherNeighbourPoint] == plant && grid[neighborPoint] == grid[otherNeighbourPoint] {
-					alreadyChecked = true
-					break
-				}
-			}
-
-			if !alreadyChecked {
-				sides++
-			}
-		}
-
 		if grid[neighborPoint] == plant {
-			neighbourPoints, neighbourSides := getNeighbours(neighborPoint, plant)
+			neighbourPoints := getNeighbours(neighborPoint, plant)
 			points = append(points, neighbourPoints...)
-			sides += neighbourSides
+
 		}
 	}
 
-	return points, sides
+	return points
+}
+
+func calcSides(points []Point, value rune) int {
+	var sidesMap = make(map[pointAndDir]struct{})
+	var sides int
+	for _, point := range points {
+		for key, dir := range directions {
+			neighborPoint := Point{X: point.X + dir[0], Y: point.Y + dir[1]}
+			if grid[neighborPoint] != value {
+				sidesMap[pointAndDir{point: point, dir: dir}] = struct{}{}
+				var alreadyChecked bool
+				for _, dir2 := range directions {
+					otherNeighbourPoint := Point{X: point.X + dir2[0], Y: point.Y + dir2[1]}
+					if grid[otherNeighbourPoint] == value {
+						if _, exists := sidesMap[pointAndDir{point: otherNeighbourPoint, dir: dir}]; exists {
+							alreadyChecked = true
+							break
+						}
+
+					}
+				}
+
+				if !alreadyChecked {
+					sides++
+					fmt.Printf("Letter %v with point %v a new side!! the side is at %v with direction %s \n", string(value), point, neighborPoint, key)
+				}
+			}
+		}
+	}
+
+	fmt.Println(sides)
+
+	return sides
 }
 
 func main() {
-	file, err := os.Open("../testinput3.txt")
+	file, err := os.Open("../testinput.txt")
 	if err != nil {
 		fmt.Println("Error opening file:", err)
 		return
@@ -100,16 +119,18 @@ func main() {
 	var regions = make(map[*Points]int)
 	for point, value := range grid {
 		if !visitedPoints[point] {
-			points, sides := getNeighbours(point, value)
+			points := getNeighbours(point, value)
 			if len(points) > 0 {
+				sides := calcSides(points, value)
 				regions[&Points{Points: points}] = sides
 			}
+
 		}
+
 	}
 
 	var sum int
 	for key, value := range regions {
-		fmt.Println(key, value)
 		area := len(key.Points)
 		sum += area * value
 	}
