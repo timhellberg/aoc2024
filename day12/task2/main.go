@@ -109,43 +109,29 @@ func calcSides(points []Point, badPoints []Point) int {
 			neighborPoint := Point{X: point.X + dir[0], Y: point.Y + dir[1]}
 			if contains(badPoints, neighborPoint) {
 				sides++
-			}
-
-			for _, dir2 := range directions {
-				otherNeighbourPoint1 := Point{X: point.X + dir2[0], Y: point.Y + dir2[1]}
-				for contains(points, otherNeighbourPoint1) {
-					sameDirPoint := Point{X: otherNeighbourPoint1.X + dir[0], Y: otherNeighbourPoint1.Y + dir[1]}
-					if contains(badPoints, sameDirPoint) {
-						sidesMap[pointAndDir{point: otherNeighbourPoint1, dir: dir}] = struct{}{}
-					} else {
-						break
+				for _, dir2 := range directions {
+					otherNeighbourPoint := Point{X: point.X + dir2[0], Y: point.Y + dir2[1]}
+					for contains(points, otherNeighbourPoint) {
+						sameDirPoint := Point{X: otherNeighbourPoint.X + dir[0], Y: otherNeighbourPoint.Y + dir[1]}
+						if contains(badPoints, sameDirPoint) {
+							sidesMap[pointAndDir{point: otherNeighbourPoint, dir: dir}] = struct{}{}
+						} else {
+							break
+						}
+						otherNeighbourPoint = Point{X: otherNeighbourPoint.X + dir2[0], Y: otherNeighbourPoint.Y + dir2[1]}
 					}
-					otherNeighbourPoint1 = Point{X: otherNeighbourPoint1.X + dir2[0], Y: otherNeighbourPoint1.Y + dir2[1]}
-				}
 
-				otherNeighbourPoint2 := Point{X: point.X - dir2[0], Y: point.Y - dir2[1]}
-				for contains(points, otherNeighbourPoint2) {
-					sameDirPoint := Point{X: otherNeighbourPoint2.X + dir[0], Y: otherNeighbourPoint2.Y + dir[1]}
-					if contains(badPoints, sameDirPoint) {
-						sidesMap[pointAndDir{point: otherNeighbourPoint2, dir: dir}] = struct{}{}
-					} else {
-						break
-					}
-					otherNeighbourPoint2 = Point{X: otherNeighbourPoint2.X - dir2[0], Y: otherNeighbourPoint2.Y - dir2[1]}
 				}
-
 			}
 
 		}
 	}
 
-	fmt.Println(sides)
-
 	return sides
 }
 
 func main() {
-	file, err := os.Open("../testinput2.txt")
+	file, err := os.Open("../input.txt")
 	if err != nil {
 		fmt.Println("Error opening file:", err)
 		return
@@ -163,9 +149,9 @@ func main() {
 				for _, point := range points {
 					badPoints = append(badPoints, getBadNeighbours(point, value)...)
 				}
-				fmt.Println(badPoints)
 				sides := calcSides(points, badPoints)
 				regions[&Points{Points: points}] = sides
+
 			}
 
 		}
